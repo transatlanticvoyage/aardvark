@@ -338,6 +338,14 @@ class Aardvark_Papluginsmar_Page {
                                             Activate
                                         </button>
                                         
+                                        <!-- De Plus Re-activate Button -->
+                                        <button class="plugin-action-btn de-plus-reactivate-btn" data-plugin="<?php echo esc_attr($plugin_path); ?>" data-action="de-plus-reactivate"
+                                                style="padding: 10px 8px; font-size: 14px; border: 1px solid #D1D5DB; margin-right: -1px; cursor: pointer; background: #2563EB; color: white;"
+                                                <?php echo !$plugin['active'] ? 'disabled' : ''; ?>>
+                                            <span class="btn-text">de plus re-activate</span>
+                                            <div class="spinner" style="display: none; width: 20px; height: 20px; border: 2px solid #f3f3f3; border-top: 2px solid #3498db; border-radius: 50%; animation: spin 1s linear infinite; margin: 0 auto;"></div>
+                                        </button>
+                                        
                                         <!-- Deactivate Button -->
                                         <button class="plugin-action-btn" data-plugin="<?php echo esc_attr($plugin_path); ?>" data-action="deactivate"
                                                 style="padding: 10px 8px; font-size: 14px; border: 1px solid #D1D5DB; margin-right: -1px; cursor: pointer; <?php echo !$plugin['active'] ? 'background: #f0f0f0; color: #888; cursor: not-allowed;' : 'background: #d63638; color: white;'; ?>"
@@ -429,6 +437,19 @@ class Aardvark_Papluginsmar_Page {
                     background: #fff;
                     border: 1px solid #2271b1;
                 }
+                @keyframes spin {
+                    0% { transform: rotate(0deg); }
+                    100% { transform: rotate(360deg); }
+                }
+                .de-plus-reactivate-btn .spinner {
+                    width: 20px;
+                    height: 20px;
+                    border: 2px solid #f3f3f3;
+                    border-top: 2px solid #3498db;
+                    border-radius: 50%;
+                    animation: spin 1s linear infinite;
+                    margin: 0 auto;
+                }
             </style>
         </div>
 
@@ -517,6 +538,69 @@ class Aardvark_Papluginsmar_Page {
                         } else {
                             alert('Error: ' + response.data);
                         }
+                    });
+                } else if (action === 'de-plus-reactivate') {
+                    // Show spinner and hide text
+                    $button.find('.btn-text').hide();
+                    $button.find('.spinner').show();
+                    $button.prop('disabled', true);
+                    
+                    // Step 1: Deactivate
+                    $button.find('.btn-text').text('Deactivating...').show();
+                    $button.find('.spinner').hide();
+                    
+                    $.post(ajaxurl, {
+                        action: 'aardvark_toggle_plugin',
+                        plugin: plugin,
+                        toggle_action: 'deactivate',
+                        nonce: '<?php echo wp_create_nonce('aardvark_plugin_action'); ?>'
+                    }).done(function(response) {
+                        if (response.success) {
+                            // Step 2: Wait a moment, then reactivate
+                            setTimeout(function() {
+                                $button.find('.btn-text').text('Reactivating...').show();
+                                $button.find('.spinner').hide();
+                                
+                                $.post(ajaxurl, {
+                                    action: 'aardvark_toggle_plugin',
+                                    plugin: plugin,
+                                    toggle_action: 'activate',
+                                    nonce: '<?php echo wp_create_nonce('aardvark_plugin_action'); ?>'
+                                }).done(function(response) {
+                                    if (response.success) {
+                                        // Step 3: Show success
+                                        $button.find('.btn-text').text('Successful!').show();
+                                        $button.find('.spinner').hide();
+                                        $button.css('background', '#00a32a');
+                                        
+                                        // Reload after showing success
+                                        setTimeout(function() {
+                                            location.reload();
+                                        }, 1000);
+                                    } else {
+                                        alert('Error reactivating: ' + response.data);
+                                        $button.find('.btn-text').text('de plus re-activate').show();
+                                        $button.find('.spinner').hide();
+                                        $button.prop('disabled', false).css('background', '#2563EB');
+                                    }
+                                }).fail(function() {
+                                    alert('Failed to reactivate plugin');
+                                    $button.find('.btn-text').text('de plus re-activate').show();
+                                    $button.find('.spinner').hide();
+                                    $button.prop('disabled', false).css('background', '#2563EB');
+                                });
+                            }, 1000);
+                        } else {
+                            alert('Error deactivating: ' + response.data);
+                            $button.find('.btn-text').text('de plus re-activate').show();
+                            $button.find('.spinner').hide();
+                            $button.prop('disabled', false).css('background', '#2563EB');
+                        }
+                    }).fail(function() {
+                        alert('Failed to deactivate plugin');
+                        $button.find('.btn-text').text('de plus re-activate').show();
+                        $button.find('.spinner').hide();
+                        $button.prop('disabled', false).css('background', '#2563EB');
                     });
                 } else if (action === 'delete') {
                     $.post(ajaxurl, {

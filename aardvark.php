@@ -35,16 +35,21 @@ class AardvarkPlugin {
     
     private function load_dependencies() {
         require_once AARDVARK_PLUGIN_PATH . 'includes/class-aardvark-admin.php';
+        require_once AARDVARK_PLUGIN_PATH . 'theme-mar/class-aardvark-theme-mar.php';
+        require_once AARDVARK_PLUGIN_PATH . 'theme-mar/class-theme-installer.php';
     }
     
     private function init_hooks() {
         new Aardvark_Admin();
+        new Aardvark_Theme_Mar();
     }
     
     public function activate() {
         $this->create_zen_plugins_oasis_table();
         $this->create_zen_github_installs_table();
+        $this->create_zen_themes_oasis_table();
         $this->populate_initial_shenzi_plugins();
+        $this->populate_initial_staircase_theme();
     }
     
     /**
@@ -212,6 +217,63 @@ class AardvarkPlugin {
                 array('%s', '%s', '%s', '%s')
             );
         }
+    }
+    
+    /**
+     * Create the wp_zen_themes_oasis database table
+     */
+    private function create_zen_themes_oasis_table() {
+        global $wpdb;
+        
+        $table_name = $wpdb->prefix . 'zen_themes_oasis';
+        
+        $charset_collate = $wpdb->get_charset_collate();
+        
+        $sql = "CREATE TABLE $table_name (
+            id INT AUTO_INCREMENT PRIMARY KEY,
+            theme_slug VARCHAR(255) NOT NULL UNIQUE,
+            theme_folder VARCHAR(255) NOT NULL,
+            github_url VARCHAR(500),
+            branch_name VARCHAR(100) DEFAULT 'main',
+            github_token VARCHAR(255),
+            auto_update TINYINT(1) DEFAULT 0,
+            last_checked DATETIME,
+            remote_version VARCHAR(50),
+            install_status ENUM('installed', 'available', 'error') DEFAULT 'available',
+            notes TEXT,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+            
+            INDEX idx_theme_slug (theme_slug),
+            INDEX idx_install_status (install_status)
+        ) $charset_collate;";
+        
+        require_once(ABSPATH . 'wp-admin/includes/upgrade.php');
+        dbDelta($sql);
+    }
+    
+    /**
+     * Populate initial Staircase theme data
+     */
+    private function populate_initial_staircase_theme() {
+        global $wpdb;
+        
+        $table_name = $wpdb->prefix . 'zen_themes_oasis';
+        
+        $staircase_theme = array(
+            'theme_slug' => 'Staircase',
+            'theme_folder' => 'staircase',
+            'github_url' => 'https://github.com/transatlanticvoyage/staircase.git',
+            'branch_name' => 'main',
+            'auto_update' => 1,
+            'remote_version' => '1.0.0'
+        );
+        
+        $wpdb->replace(
+            $table_name,
+            $staircase_theme,
+            array('%s', '%s', '%s', '%s', '%d', '%s')
+        );
     }
     
     public function deactivate() {
