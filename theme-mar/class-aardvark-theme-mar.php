@@ -140,6 +140,16 @@ class Aardvark_Theme_Mar {
             wp_die('Insufficient permissions');
         }
         
+        // Domain Check (Primary Defense) - Block local development environments
+        $current_domain = $_SERVER['HTTP_HOST'];
+        $blocked_domains = ['localhost', '127.0.0.1', '.local', '.test', '.dev', '192.168.'];
+        
+        foreach ($blocked_domains as $blocked) {
+            if (stripos($current_domain, $blocked) !== false) {
+                wp_send_json_error('GitHub update is disabled on local development environments for safety. Current domain: ' . $current_domain);
+            }
+        }
+        
         $theme_folder = sanitize_text_field($_POST['theme']);
         
         // Get theme info from database
