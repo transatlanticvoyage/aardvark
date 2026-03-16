@@ -42,6 +42,26 @@ class AardvarkPlugin {
     private function init_hooks() {
         new Aardvark_Admin();
         new Aardvark_Theme_Mar();
+        
+        // Initialize Mass Update controller if on admin
+        if (is_admin()) {
+            $this->init_mass_update_controller();
+        }
+    }
+    
+    /**
+     * Initialize Mass Update controller
+     */
+    private function init_mass_update_controller() {
+        // Only load if we're on the Mass Update page or doing AJAX
+        $is_mass_update_page = isset($_GET['page']) && $_GET['page'] === 'mass-update-plugins-and-theme-mar';
+        $is_mass_update_ajax = defined('DOING_AJAX') && DOING_AJAX && isset($_POST['action']) && strpos($_POST['action'], 'aardvark_mass_update') === 0;
+        
+        if ($is_mass_update_page || $is_mass_update_ajax) {
+            require_once AARDVARK_PLUGIN_PATH . 'mass-update-plugins-and-theme-mar/class-mass-update-controller.php';
+            $mass_update_controller = new Aardvark_Mass_Update_Controller();
+            $mass_update_controller->init_hooks();
+        }
     }
     
     public function activate() {

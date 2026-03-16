@@ -29,6 +29,16 @@ class Aardvark_Admin {
             'dashicons-admin-plugins',
             3.1
         );
+        
+        // Add Mass Update submenu page
+        add_submenu_page(
+            'papluginsmar',
+            'Mass Update Plugins and Theme Mar',
+            'Mass Update',
+            'manage_options',
+            'mass-update-plugins-and-theme-mar',
+            array($this, 'display_mass_update_page')
+        );
     }
     
     /**
@@ -36,7 +46,8 @@ class Aardvark_Admin {
      */
     public function maybe_suppress_notices() {
         $screen = get_current_screen();
-        if ($screen && $screen->base === 'toplevel_page_papluginsmar') {
+        if ($screen && ($screen->base === 'toplevel_page_papluginsmar' || 
+                       $screen->base === 'aardvark_page_mass-update-plugins-and-theme-mar')) {
             $this->suppress_all_admin_notices();
         }
     }
@@ -45,6 +56,15 @@ class Aardvark_Admin {
         require_once plugin_dir_path(__FILE__) . 'pages/papluginsmar-page.php';
         $page = new Aardvark_Papluginsmar_Page();
         $page->render();
+    }
+    
+    /**
+     * Display Mass Update page
+     */
+    public function display_mass_update_page() {
+        require_once AARDVARK_PLUGIN_PATH . 'mass-update-plugins-and-theme-mar/class-mass-update-controller.php';
+        $controller = new Aardvark_Mass_Update_Controller();
+        $controller->render();
     }
     
     /**
