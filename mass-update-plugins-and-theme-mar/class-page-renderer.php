@@ -76,6 +76,32 @@ class Aardvark_Mass_Update_Page_Renderer {
                                 </div>
                             </div>
                             
+                            <!-- Axiom Plugin -->
+                            <div style="background: white; border: 1px solid #e0e0e0; border-radius: 4px; padding: 15px;">
+                                <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 10px;">
+                                    <span style="font-size: 24px;">⚡</span>
+                                    <strong style="font-size: 16px;">Axiom</strong>
+                                </div>
+                                <div style="font-size: 13px; color: #666;">
+                                    <div>Type: Plugin</div>
+                                    <div>Path: axiom/axiom.php</div>
+                                    <div id="axiom-status" style="margin-top: 5px; font-weight: bold; color: #666;">Status: Ready</div>
+                                </div>
+                            </div>
+                            
+                            <!-- Aardvark Plugin -->
+                            <div style="background: white; border: 1px solid #e0e0e0; border-radius: 4px; padding: 15px;">
+                                <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 10px;">
+                                    <span style="font-size: 24px;">🦫</span>
+                                    <strong style="font-size: 16px;">Aardvark</strong>
+                                </div>
+                                <div style="font-size: 13px; color: #666;">
+                                    <div>Type: Plugin</div>
+                                    <div>Path: aardvark/aardvark.php</div>
+                                    <div id="aardvark-status" style="margin-top: 5px; font-weight: bold; color: #666;">Status: Ready</div>
+                                </div>
+                            </div>
+                            
                             <!-- Staircase Theme -->
                             <div style="background: white; border: 1px solid #e0e0e0; border-radius: 4px; padding: 15px;">
                                 <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 10px;">
@@ -97,7 +123,7 @@ class Aardvark_Mass_Update_Page_Renderer {
                             🚀 Update All From GitHub
                         </button>
                         <div style="margin-top: 10px; font-size: 14px; color: #666;">
-                            This will update Ruplin, Grove, and Staircase from their GitHub repositories
+                            This will update Ruplin, Grove, Axiom, Aardvark, and Staircase from their GitHub repositories
                         </div>
                     </div>
                     
@@ -218,7 +244,7 @@ class Aardvark_Mass_Update_Page_Renderer {
             $('#mass-update-button').on('click', function() {
                 if (isUpdating) return;
                 
-                if (!confirm('This will update Ruplin, Grove, and Staircase from GitHub. Continue?')) {
+                if (!confirm('This will update Ruplin, Grove, Axiom, Aardvark, and Staircase from GitHub. Continue?')) {
                     return;
                 }
                 
@@ -228,6 +254,8 @@ class Aardvark_Mass_Update_Page_Renderer {
                 // Reset status displays
                 $('#ruplin-status').text('Status: Updating...').css('color', '#2271b1');
                 $('#grove-status').text('Status: Updating...').css('color', '#2271b1');
+                $('#axiom-status').text('Status: Updating...').css('color', '#2271b1');
+                $('#aardvark-status').text('Status: Updating...').css('color', '#2271b1');
                 $('#staircase-status').text('Status: Updating...').css('color', '#2271b1');
                 
                 // Hide results, show progress
@@ -279,6 +307,8 @@ class Aardvark_Mass_Update_Page_Renderer {
                 // Update individual statuses
                 updateComponentStatus('ruplin', data.details.ruplin);
                 updateComponentStatus('grove', data.details.grove);
+                updateComponentStatus('axiom', data.details.axiom);
+                updateComponentStatus('aardvark', data.details.aardvark);
                 updateComponentStatus('staircase', data.details.staircase);
                 
                 // Show results
@@ -316,6 +346,8 @@ class Aardvark_Mass_Update_Page_Renderer {
                 // Update all statuses to error
                 $('#ruplin-status').text('Status: Error').css('color', '#842029');
                 $('#grove-status').text('Status: Error').css('color', '#842029');
+                $('#axiom-status').text('Status: Error').css('color', '#842029');
+                $('#aardvark-status').text('Status: Error').css('color', '#842029');
                 $('#staircase-status').text('Status: Error').css('color', '#842029');
                 
                 // Show error in results

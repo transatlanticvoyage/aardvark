@@ -17,7 +17,7 @@ class Aardvark_Mass_Update_Ajax {
     }
     
     /**
-     * AJAX handler for mass updating Ruplin, Grove, and Staircase
+     * AJAX handler for mass updating Ruplin, Grove, Axiom, Aardvark, and Staircase
      */
     public function ajax_mass_update_all() {
         check_ajax_referer('aardvark_mass_update', 'nonce');
@@ -39,6 +39,8 @@ class Aardvark_Mass_Update_Ajax {
         $results = array(
             'ruplin' => array('status' => 'pending', 'message' => ''),
             'grove' => array('status' => 'pending', 'message' => ''),
+            'axiom' => array('status' => 'pending', 'message' => ''),
+            'aardvark' => array('status' => 'pending', 'message' => ''),
             'staircase' => array('status' => 'pending', 'message' => '')
         );
         
@@ -47,6 +49,12 @@ class Aardvark_Mass_Update_Ajax {
         
         // Update Grove plugin  
         $results['grove'] = $this->update_plugin('grove/grove.php');
+        
+        // Update Axiom plugin
+        $results['axiom'] = $this->update_plugin('axiom/axiom.php');
+        
+        // Update Aardvark plugin
+        $results['aardvark'] = $this->update_plugin('aardvark/aardvark.php');
         
         // Update Staircase theme
         $results['staircase'] = $this->update_theme('staircase');
