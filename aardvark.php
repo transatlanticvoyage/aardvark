@@ -7,6 +7,8 @@
  * Author: Aardvark Team
  * License: GPL v2 or later
  * Text Domain: aardvark
+ * 
+ * Test comment: VSCode source control pane test - 2026-03-20
  */
 
 // Prevent direct access
