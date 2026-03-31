@@ -26,15 +26,37 @@ class Aardvark_Mass_Update_Ajax {
             wp_send_json_error('Insufficient permissions');
         }
         
-        // Domain Check (Primary Defense) - Block local development environments
+        // Domain Check (Primary Defense) - Block only saltwater.local repository domain
         $current_domain = $_SERVER['HTTP_HOST'];
-        $blocked_domains = ['localhost', '127.0.0.1', '.local', '.test', '.dev', '192.168.'];
         
-        foreach ($blocked_domains as $blocked) {
+        // Debug info for troubleshooting
+        $debug_info = array(
+            'current_domain' => $current_domain,
+            'php_version' => PHP_VERSION,
+            'plugin_file' => __FILE__,
+            'last_modified' => date('Y-m-d H:i:s', filemtime(__FILE__)),
+            'server_name' => $_SERVER['SERVER_NAME'] ?? 'not set',
+            'http_host' => $_SERVER['HTTP_HOST'] ?? 'not set'
+        );
+        
+        // Only block saltwater.local (the main development repository)
+        // Allow other .local domains like cormerant.local to use mass update
+        if ($current_domain === 'saltwater.local' || $current_domain === 'www.saltwater.local') {
+            $debug_info['blocked_reason'] = 'Domain matches saltwater.local';
+            wp_send_json_error('Mass update is disabled on saltwater.local repository domain. Debug: ' . json_encode($debug_info));
+        }
+        
+        // Optional: Still block localhost and direct IP access
+        $strictly_blocked = ['localhost', '127.0.0.1', '192.168.'];
+        foreach ($strictly_blocked as $blocked) {
             if (stripos($current_domain, $blocked) !== false) {
-                wp_send_json_error('Mass update is disabled on local development environments for safety. Current domain: ' . $current_domain);
+                $debug_info['blocked_reason'] = 'Domain contains: ' . $blocked;
+                wp_send_json_error('Mass update is disabled. Debug: ' . json_encode($debug_info));
             }
         }
+        
+        // If we get here, domain should be allowed - add success debug
+        error_log('Mass update allowed for domain: ' . $current_domain . ' - Debug: ' . json_encode($debug_info));
         
         $results = array(
             'ruplin' => array('status' => 'pending', 'message' => ''),
