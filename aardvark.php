@@ -39,11 +39,13 @@ class AardvarkPlugin {
         require_once AARDVARK_PLUGIN_PATH . 'includes/class-aardvark-admin.php';
         require_once AARDVARK_PLUGIN_PATH . 'theme-mar/class-aardvark-theme-mar.php';
         require_once AARDVARK_PLUGIN_PATH . 'theme-mar/class-theme-installer.php';
+        require_once AARDVARK_PLUGIN_PATH . 'admin-screens/ppx-themes-plugins-mar/class-ppx-themes-plugins-mar.php';
     }
-    
+
     private function init_hooks() {
         new Aardvark_Admin();
         new Aardvark_Theme_Mar();
+        new Aardvark_PPX_Themes_Plugins_Mar();
         
         // Initialize Mass Update controller if on admin
         if (is_admin()) {
