@@ -166,7 +166,11 @@ class Aardvark_PPX_Themes_Plugins_Mar_Page {
                         </tr>
                     </thead>
                     <tbody>
-                        <?php foreach ($themes_data as $theme): ?>
+                        <?php foreach ($themes_data as $theme):
+                            $theme_obj = wp_get_theme($theme['slug']);
+                            $is_installed = $theme_obj->exists();
+                            $is_active = (get_stylesheet() === $theme['slug']);
+                        ?>
                         <tr data-theme-slug="<?php echo esc_attr($theme['slug']); ?>">
                             <td style="border: 1px solid #555; padding: 8px; text-align: center;">
                                 <input type="checkbox" class="theme-checkbox" value="<?php echo esc_attr($theme['slug']); ?>">
@@ -196,16 +200,53 @@ class Aardvark_PPX_Themes_Plugins_Mar_Page {
                                 <button class="copy-branch-btn" data-copy-value="<?php echo esc_attr($theme['branch_name']); ?>" style="position: absolute; right: 0; top: 0; height: 100%; width: 12px; border: 1px solid gray; background: gray; cursor: pointer; font-size: 8px;" onmouseover="this.style.background='yellow'" onmouseout="this.style.background='gray'"></button>
                             </td>
                             <td style="border: 1px solid #555; padding: 8px;">
-                                <div style="display: inline-flex; border-radius: 6px; box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);">
-                                    <button class="theme-action-btn" data-theme="<?php echo esc_attr($theme['slug']); ?>" data-action="update-github"
-                                            style="padding: 10px 8px; font-size: 14px; border: 1px solid #D1D5DB; border-radius: 6px 0 0 6px; margin-right: -1px; cursor: pointer; background: #2271b1; color: white;">
-                                        Update From Github
-                                    </button>
-                                    <button class="theme-action-btn" data-theme="<?php echo esc_attr($theme['slug']); ?>" data-action="delete"
-                                            style="padding: 10px 8px; font-size: 14px; border: 1px solid #D1D5DB; border-radius: 0 6px 6px 0; cursor: pointer; background: #b32d2e; color: white;">
-                                        Delete
-                                    </button>
-                                </div>
+                                <?php if (!$is_installed): ?>
+                                    <!-- Install Button for uninstalled themes -->
+                                    <div style="display: inline-flex; border-radius: 6px; box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);">
+                                        <button class="theme-action-btn" data-theme="<?php echo esc_attr($theme['slug']); ?>" data-action="install"
+                                                style="padding: 10px 16px; font-size: 14px; border: 1px solid #D1D5DB; border-radius: 6px; cursor: pointer; background: #2271b1; color: white;">
+                                            Install from GitHub
+                                        </button>
+                                    </div>
+                                <?php else: ?>
+                                    <!-- Standard buttons for installed themes -->
+                                    <div style="display: inline-flex; border-radius: 6px; box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);">
+                                        <!-- Update From Github Button -->
+                                        <button class="theme-action-btn" data-theme="<?php echo esc_attr($theme['slug']); ?>" data-action="update-github"
+                                                style="padding: 10px 8px; font-size: 14px; border: 1px solid #D1D5DB; border-radius: 6px 0 0 6px; margin-right: -1px; cursor: pointer; <?php echo empty($theme['github_url']) ? 'background: #f0f0f0; color: #888; cursor: not-allowed;' : 'background: #2271b1; color: white;'; ?>"
+                                                <?php echo empty($theme['github_url']) ? 'disabled' : ''; ?>>
+                                            Update From Github
+                                        </button>
+
+                                        <!-- Activate Button -->
+                                        <button class="theme-action-btn" data-theme="<?php echo esc_attr($theme['slug']); ?>" data-action="activate"
+                                                style="padding: 10px 8px; font-size: 14px; border: 1px solid #D1D5DB; margin-right: -1px; cursor: pointer; <?php echo $is_active ? 'background: #f0f0f0; color: #888; cursor: not-allowed;' : 'background: #00a32a; color: white;'; ?>"
+                                                <?php echo $is_active ? 'disabled' : ''; ?>>
+                                            Activate
+                                        </button>
+
+                                        <!-- De Plus Re-activate Button -->
+                                        <button class="theme-action-btn de-plus-reactivate-btn" data-theme="<?php echo esc_attr($theme['slug']); ?>" data-action="de-plus-reactivate"
+                                                style="padding: 10px 8px; font-size: 14px; border: 1px solid #D1D5DB; margin-right: -1px; cursor: pointer; background: #2563EB; color: white;"
+                                                <?php echo !$is_active ? 'disabled' : ''; ?>>
+                                            <span class="btn-text">de plus re-activate</span>
+                                            <div class="spinner" style="display: none; width: 20px; height: 20px; border: 2px solid #f3f3f3; border-top: 2px solid #3498db; border-radius: 50%; animation: spin 1s linear infinite; margin: 0 auto;"></div>
+                                        </button>
+
+                                        <!-- Deactivate Button -->
+                                        <button class="theme-action-btn" data-theme="<?php echo esc_attr($theme['slug']); ?>" data-action="deactivate"
+                                                style="padding: 10px 8px; font-size: 14px; border: 1px solid #D1D5DB; margin-right: -1px; cursor: pointer; <?php echo !$is_active ? 'background: #f0f0f0; color: #888; cursor: not-allowed;' : 'background: #d63638; color: white;'; ?>"
+                                                <?php echo !$is_active ? 'disabled' : ''; ?>>
+                                            Deactivate
+                                        </button>
+
+                                        <!-- Delete Button -->
+                                        <button class="theme-action-btn" data-theme="<?php echo esc_attr($theme['slug']); ?>" data-action="delete"
+                                                style="padding: 10px 8px; font-size: 14px; border: 1px solid #D1D5DB; border-radius: 0 6px 6px 0; cursor: pointer; background: #b32d2e; color: white;">
+                                            Delete
+                                        </button>
+                                    </div>
+                                <?php endif; ?>
                             </td>
                         </tr>
                         <?php endforeach; ?>
@@ -243,6 +284,14 @@ class Aardvark_PPX_Themes_Plugins_Mar_Page {
                 @keyframes spin {
                     0% { transform: rotate(0deg); }
                     100% { transform: rotate(360deg); }
+                }
+                .de-plus-reactivate-btn .spinner {
+                    width: 20px;
+                    height: 20px;
+                    border: 2px solid #f3f3f3;
+                    border-top: 2px solid #3498db;
+                    border-radius: 50%;
+                    animation: spin 1s linear infinite;
                 }
             </style>
         </div>
@@ -330,6 +379,36 @@ class Aardvark_PPX_Themes_Plugins_Mar_Page {
                 }
             });
 
+            // Install from GitHub action
+            $(document).on('click', '.theme-action-btn[data-action="install"]', function() {
+                var $button = $(this);
+                var themeSlug = $button.data('theme');
+
+                if (!confirm('Are you sure you want to install "' + themeSlug + '" from GitHub?')) {
+                    return;
+                }
+
+                var originalText = $button.text();
+                $button.text('Installing...').prop('disabled', true).css({'opacity': '0.7', 'cursor': 'not-allowed'});
+
+                $.post(ajaxurl, {
+                    action: 'aardvark_install_theme',
+                    theme: themeSlug,
+                    nonce: '<?php echo wp_create_nonce('aardvark_theme_install'); ?>'
+                }).done(function(response) {
+                    if (response.success) {
+                        alert('Theme "' + themeSlug + '" installed successfully.');
+                        location.reload();
+                    } else {
+                        alert('Error installing theme: ' + (response.data || 'Unknown error'));
+                        $button.text(originalText).prop('disabled', false).css({'opacity': '1', 'cursor': 'pointer'});
+                    }
+                }).fail(function() {
+                    alert('Failed to install theme. Please try again.');
+                    $button.text(originalText).prop('disabled', false).css({'opacity': '1', 'cursor': 'pointer'});
+                });
+            });
+
             // Update From Github action
             $(document).on('click', '.theme-action-btn[data-action="update-github"]', function() {
                 var $button = $(this);
@@ -343,8 +422,8 @@ class Aardvark_PPX_Themes_Plugins_Mar_Page {
                 $button.text('Updating...').prop('disabled', true).css({'opacity': '0.7', 'cursor': 'not-allowed'});
 
                 $.post(ajaxurl, {
-                    action: 'aardvark_update_github_theme',
-                    theme_slug: themeSlug,
+                    action: 'aardvark_update_theme',
+                    theme: themeSlug,
                     nonce: '<?php echo wp_create_nonce('aardvark_theme_update'); ?>'
                 }).done(function(response) {
                     if (response.success) {
@@ -357,6 +436,113 @@ class Aardvark_PPX_Themes_Plugins_Mar_Page {
                 }).fail(function() {
                     alert('Failed to update theme. Please try again.');
                     $button.text(originalText).prop('disabled', false).css({'opacity': '1', 'cursor': 'pointer'});
+                });
+            });
+
+            // Activate action
+            $(document).on('click', '.theme-action-btn[data-action="activate"]', function() {
+                var $button = $(this);
+                var themeSlug = $button.data('theme');
+
+                if (!confirm('Are you sure you want to activate "' + themeSlug + '"?')) {
+                    return;
+                }
+
+                var originalText = $button.text();
+                $button.text('Activating...').prop('disabled', true).css({'opacity': '0.7', 'cursor': 'not-allowed'});
+
+                $.post(ajaxurl, {
+                    action: 'aardvark_activate_theme',
+                    theme: themeSlug,
+                    nonce: '<?php echo wp_create_nonce('aardvark_theme_activate'); ?>'
+                }).done(function(response) {
+                    if (response.success) {
+                        alert('Theme "' + themeSlug + '" activated successfully.');
+                        location.reload();
+                    } else {
+                        alert('Error activating theme: ' + (response.data || 'Unknown error'));
+                        $button.text(originalText).prop('disabled', false).css({'opacity': '1', 'cursor': 'pointer'});
+                    }
+                }).fail(function() {
+                    alert('Failed to activate theme. Please try again.');
+                    $button.text(originalText).prop('disabled', false).css({'opacity': '1', 'cursor': 'pointer'});
+                });
+            });
+
+            // De plus re-activate action
+            $(document).on('click', '.theme-action-btn[data-action="de-plus-reactivate"]', function() {
+                var $button = $(this);
+                var themeSlug = $button.data('theme');
+
+                if (!confirm('Are you sure you want to de-activate and re-activate "' + themeSlug + '"?')) {
+                    return;
+                }
+
+                $button.find('.btn-text').hide();
+                $button.find('.spinner').show();
+                $button.prop('disabled', true).css({'opacity': '0.7', 'cursor': 'not-allowed'});
+
+                // Step 1: Switch to default theme to deactivate
+                $.post(ajaxurl, {
+                    action: 'aardvark_activate_theme',
+                    theme: 'twentytwentyfour',
+                    nonce: '<?php echo wp_create_nonce('aardvark_theme_activate'); ?>'
+                }).done(function(response) {
+                    // Step 2: Re-activate original theme
+                    $.post(ajaxurl, {
+                        action: 'aardvark_activate_theme',
+                        theme: themeSlug,
+                        nonce: '<?php echo wp_create_nonce('aardvark_theme_activate'); ?>'
+                    }).done(function(response2) {
+                        if (response2.success) {
+                            alert('Theme "' + themeSlug + '" de-activated and re-activated successfully.');
+                            location.reload();
+                        } else {
+                            alert('Error re-activating theme: ' + (response2.data || 'Unknown error'));
+                            $button.find('.spinner').hide();
+                            $button.find('.btn-text').show();
+                            $button.prop('disabled', false).css({'opacity': '1', 'cursor': 'pointer'});
+                        }
+                    }).fail(function() {
+                        alert('Failed to re-activate theme. Please try again.');
+                        $button.find('.spinner').hide();
+                        $button.find('.btn-text').show();
+                        $button.prop('disabled', false).css({'opacity': '1', 'cursor': 'pointer'});
+                    });
+                }).fail(function() {
+                    alert('Failed to deactivate theme. Please try again.');
+                    $button.find('.spinner').hide();
+                    $button.find('.btn-text').show();
+                    $button.prop('disabled', false).css({'opacity': '1', 'cursor': 'pointer'});
+                });
+            });
+
+            // Deactivate action
+            $(document).on('click', '.theme-action-btn[data-action="deactivate"]', function() {
+                var $button = $(this);
+                var themeSlug = $button.data('theme');
+
+                if (!confirm('Are you sure you want to deactivate "' + themeSlug + '"? This will switch to the default theme.')) {
+                    return;
+                }
+
+                $button.text('Deactivating...').prop('disabled', true).css({'opacity': '0.7', 'cursor': 'not-allowed'});
+
+                $.post(ajaxurl, {
+                    action: 'aardvark_activate_theme',
+                    theme: 'twentytwentyfour',
+                    nonce: '<?php echo wp_create_nonce('aardvark_theme_activate'); ?>'
+                }).done(function(response) {
+                    if (response.success) {
+                        alert('Theme "' + themeSlug + '" deactivated. Switched to default theme.');
+                        location.reload();
+                    } else {
+                        alert('Error deactivating theme: ' + (response.data || 'Unknown error'));
+                        $button.text('Deactivate').prop('disabled', false).css({'opacity': '1', 'cursor': 'pointer'});
+                    }
+                }).fail(function() {
+                    alert('Failed to deactivate theme. Please try again.');
+                    $button.text('Deactivate').prop('disabled', false).css({'opacity': '1', 'cursor': 'pointer'});
                 });
             });
 
@@ -373,7 +559,7 @@ class Aardvark_PPX_Themes_Plugins_Mar_Page {
 
                 $.post(ajaxurl, {
                     action: 'aardvark_delete_theme',
-                    theme_slug: themeSlug,
+                    theme: themeSlug,
                     nonce: '<?php echo wp_create_nonce('aardvark_theme_delete'); ?>'
                 }).done(function(response) {
                     if (response.success) {
@@ -420,14 +606,14 @@ class Aardvark_PPX_Themes_Plugins_Mar_Page {
                     var nonce = '';
 
                     if (action === 'update') {
-                        ajaxAction = 'aardvark_update_github_theme';
+                        ajaxAction = 'aardvark_update_theme';
                         nonce = '<?php echo wp_create_nonce('aardvark_theme_update'); ?>';
                     }
 
                     if (ajaxAction) {
                         $.post(ajaxurl, {
                             action: ajaxAction,
-                            theme_slug: themeSlug,
+                            theme: themeSlug,
                             nonce: nonce
                         }).done(function(response) {
                             if (!response.success) {
