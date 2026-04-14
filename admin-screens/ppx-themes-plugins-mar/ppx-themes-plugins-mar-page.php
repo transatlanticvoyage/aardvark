@@ -122,9 +122,13 @@ class Aardvark_PPX_Themes_Plugins_Mar_Page {
 
             <h2 style="margin: 30px 0 15px 0;">Hauser Themes</h2>
 
-            <!-- Search -->
-            <div style="margin-bottom: 15px;">
+            <!-- Search and Active Theme Badge -->
+            <div style="margin-bottom: 15px; display: flex; align-items: center; gap: 15px;">
                 <input type="text" id="theme-search" placeholder="Search themes..." style="width: 300px; padding: 8px 12px; border: 1px solid #D1D5DB; border-radius: 4px; font-size: 14px; background: white; outline: none; transition: all 0.15s ease;" onFocus="this.style.outline='none'; this.style.borderColor='#3B82F6'; this.style.boxShadow='0 0 0 2px rgba(59, 130, 246, 0.1)'" onBlur="this.style.borderColor='#D1D5DB'; this.style.boxShadow='none'">
+                <div style="display: inline-flex; align-items: center; gap: 8px; padding: 8px 14px; border: 1px solid #c3c4c7; border-radius: 4px; background: #f0f6fc; font-size: 14px;">
+                    <span style="color: #646970;">current active theme:</span>
+                    <strong style="color: #0969da;"><?php echo esc_html(wp_get_theme()->get('Name')); ?></strong>
+                </div>
             </div>
 
             <!-- Bulk Actions Section -->
