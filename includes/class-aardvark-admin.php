@@ -21,8 +21,8 @@ class Aardvark_Admin {
     
     public function add_admin_menu() {
         add_menu_page(
-            'Shenzi Plugins',
-            'Shenzi Plugins',
+            'Aardvark',
+            'Aardvark',
             'manage_options',
             'papluginsmar',
             array($this, 'display_admin_page'),
