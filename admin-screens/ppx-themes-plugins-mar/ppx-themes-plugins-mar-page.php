@@ -293,11 +293,107 @@ class Aardvark_PPX_Themes_Plugins_Mar_Page {
                     border-radius: 50%;
                     animation: spin 1s linear infinite;
                 }
+                /* Debug feedback popup */
+                .ppx-debug-overlay {
+                    position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+                    background: rgba(0,0,0,0.55); z-index: 99999;
+                    display: flex; align-items: center; justify-content: center;
+                }
+                .ppx-debug-popup {
+                    background: #fff; border-radius: 8px; box-shadow: 0 8px 32px rgba(0,0,0,0.25);
+                    width: 620px; max-width: 90vw; max-height: 80vh; overflow-y: auto;
+                    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+                }
+                .ppx-debug-popup-header {
+                    padding: 16px 20px; border-bottom: 1px solid #e5e7eb;
+                    display: flex; align-items: center; justify-content: space-between;
+                }
+                .ppx-debug-popup-header.error { background: #fef2f2; }
+                .ppx-debug-popup-header.success { background: #f0fdf4; }
+                .ppx-debug-popup-header h3 { margin: 0; font-size: 16px; }
+                .ppx-debug-popup-header.error h3 { color: #dc2626; }
+                .ppx-debug-popup-header.success h3 { color: #16a34a; }
+                .ppx-debug-popup-close {
+                    background: none; border: none; font-size: 22px; cursor: pointer;
+                    color: #6b7280; padding: 0 4px; line-height: 1;
+                }
+                .ppx-debug-popup-close:hover { color: #111; }
+                .ppx-debug-popup-body { padding: 16px 20px; }
+                .ppx-debug-popup-body .ppx-debug-row {
+                    display: flex; padding: 6px 0; border-bottom: 1px solid #f3f4f6; font-size: 13px;
+                }
+                .ppx-debug-popup-body .ppx-debug-label {
+                    width: 130px; flex-shrink: 0; font-weight: 600; color: #374151;
+                }
+                .ppx-debug-popup-body .ppx-debug-value {
+                    color: #6b7280; word-break: break-all; font-family: monospace; font-size: 12px;
+                }
+                .ppx-debug-popup-body .ppx-debug-response {
+                    margin-top: 12px; padding: 10px; background: #f9fafb; border: 1px solid #e5e7eb;
+                    border-radius: 4px; font-family: monospace; font-size: 11px; color: #374151;
+                    white-space: pre-wrap; max-height: 200px; overflow-y: auto;
+                }
             </style>
         </div>
 
         <script>
         jQuery(document).ready(function($) {
+
+            // Debug feedback popup helper
+            function showDebugPopup(type, title, data) {
+                var headerClass = (type === 'success') ? 'success' : 'error';
+                var html = '<div class="ppx-debug-overlay">';
+                html += '<div class="ppx-debug-popup">';
+                html += '<div class="ppx-debug-popup-header ' + headerClass + '">';
+                html += '<h3>' + title + '</h3>';
+                html += '<button class="ppx-debug-popup-close">&times;</button>';
+                html += '</div>';
+                html += '<div class="ppx-debug-popup-body">';
+
+                if (typeof data === 'object' && data !== null) {
+                    // Main message
+                    if (data.message) {
+                        html += '<div class="ppx-debug-row"><span class="ppx-debug-label">Message</span><span class="ppx-debug-value">' + data.message + '</span></div>';
+                    }
+                    if (data.theme_slug) {
+                        html += '<div class="ppx-debug-row"><span class="ppx-debug-label">Theme Slug</span><span class="ppx-debug-value">' + data.theme_slug + '</span></div>';
+                    }
+                    if (data.github_url) {
+                        html += '<div class="ppx-debug-row"><span class="ppx-debug-label">GitHub URL</span><span class="ppx-debug-value">' + data.github_url + '</span></div>';
+                    }
+                    if (data.branch) {
+                        html += '<div class="ppx-debug-row"><span class="ppx-debug-label">Branch</span><span class="ppx-debug-value">' + data.branch + '</span></div>';
+                    }
+                    // Debug sub-object
+                    if (data.debug) {
+                        var d = data.debug;
+                        if (d.status_code) {
+                            html += '<div class="ppx-debug-row"><span class="ppx-debug-label">HTTP Status</span><span class="ppx-debug-value">' + d.status_code + '</span></div>';
+                        }
+                        if (d.url) {
+                            html += '<div class="ppx-debug-row"><span class="ppx-debug-label">API URL</span><span class="ppx-debug-value">' + d.url + '</span></div>';
+                        }
+                        if (d.owner) {
+                            html += '<div class="ppx-debug-row"><span class="ppx-debug-label">Repo Owner</span><span class="ppx-debug-value">' + d.owner + '</span></div>';
+                        }
+                        if (d.repo) {
+                            html += '<div class="ppx-debug-row"><span class="ppx-debug-label">Repo Name</span><span class="ppx-debug-value">' + d.repo + '</span></div>';
+                        }
+                        html += '<div class="ppx-debug-row"><span class="ppx-debug-label">Has Token</span><span class="ppx-debug-value">' + (d.has_token ? 'Yes' : 'No') + '</span></div>';
+                        if (d.response_body) {
+                            html += '<div class="ppx-debug-response">' + $('<div>').text(d.response_body).html() + '</div>';
+                        }
+                    }
+                } else {
+                    html += '<div class="ppx-debug-row"><span class="ppx-debug-label">Message</span><span class="ppx-debug-value">' + (data || 'Unknown error') + '</span></div>';
+                }
+
+                html += '</div></div></div>';
+
+                var $popup = $(html).appendTo('body');
+                $popup.on('click', '.ppx-debug-popup-close', function() { $popup.remove(); });
+                $popup.on('click', function(e) { if ($(e.target).hasClass('ppx-debug-overlay')) $popup.remove(); });
+            }
             // Selection functionality
             let selectedCount = 0;
 
@@ -397,14 +493,14 @@ class Aardvark_PPX_Themes_Plugins_Mar_Page {
                     nonce: '<?php echo wp_create_nonce('aardvark_theme_install'); ?>'
                 }).done(function(response) {
                     if (response.success) {
-                        alert('Theme "' + themeSlug + '" installed successfully.');
-                        location.reload();
+                        showDebugPopup('success', 'Theme Installed', {message: 'Theme "' + themeSlug + '" installed successfully.'});
+                        setTimeout(function() { location.reload(); }, 1500);
                     } else {
-                        alert('Error installing theme: ' + (response.data || 'Unknown error'));
+                        showDebugPopup('error', 'Install Failed', response.data);
                         $button.text(originalText).prop('disabled', false).css({'opacity': '1', 'cursor': 'pointer'});
                     }
-                }).fail(function() {
-                    alert('Failed to install theme. Please try again.');
+                }).fail(function(jqXHR) {
+                    showDebugPopup('error', 'Install Request Failed', {message: 'AJAX request failed', debug: {status_code: jqXHR.status, response_body: jqXHR.responseText ? jqXHR.responseText.substring(0, 500) : ''}});
                     $button.text(originalText).prop('disabled', false).css({'opacity': '1', 'cursor': 'pointer'});
                 });
             });
@@ -427,14 +523,14 @@ class Aardvark_PPX_Themes_Plugins_Mar_Page {
                     nonce: '<?php echo wp_create_nonce('aardvark_theme_update'); ?>'
                 }).done(function(response) {
                     if (response.success) {
-                        alert('Theme "' + themeSlug + '" updated successfully.');
-                        location.reload();
+                        showDebugPopup('success', 'Theme Updated', {message: 'Theme "' + themeSlug + '" updated successfully.'});
+                        setTimeout(function() { location.reload(); }, 1500);
                     } else {
-                        alert('Error updating theme: ' + (response.data || 'Unknown error'));
+                        showDebugPopup('error', 'Update Failed', response.data);
                         $button.text(originalText).prop('disabled', false).css({'opacity': '1', 'cursor': 'pointer'});
                     }
-                }).fail(function() {
-                    alert('Failed to update theme. Please try again.');
+                }).fail(function(jqXHR) {
+                    showDebugPopup('error', 'Update Request Failed', {message: 'AJAX request failed', debug: {status_code: jqXHR.status, response_body: jqXHR.responseText ? jqXHR.responseText.substring(0, 500) : ''}});
                     $button.text(originalText).prop('disabled', false).css({'opacity': '1', 'cursor': 'pointer'});
                 });
             });

@@ -37,10 +37,14 @@ class Aardvark_Theme_Installer {
             if ($result['success']) {
                 // Update database record
                 $this->update_theme_status($repo_info['name'], 'installed');
-                
+
                 return array('message' => 'Theme installed successfully from GitHub');
             } else {
-                return array('error' => $result['error']);
+                $ret = array('error' => $result['error']);
+                if (isset($result['debug'])) {
+                    $ret['debug'] = $result['debug'];
+                }
+                return $ret;
             }
             
         } catch (Exception $e) {
@@ -79,17 +83,21 @@ class Aardvark_Theme_Installer {
             if ($result['success']) {
                 // Remove backup on success
                 $this->remove_directory($backup_path);
-                
+
                 // Update database record
                 $this->update_theme_status($theme_folder, 'installed');
-                
+
                 return array('message' => 'Theme updated successfully from GitHub');
             } else {
                 // Restore backup on failure
                 $this->remove_directory($theme_path);
                 rename($backup_path, $theme_path);
-                
-                return array('error' => $result['error']);
+
+                $ret = array('error' => $result['error']);
+                if (isset($result['debug'])) {
+                    $ret['debug'] = $result['debug'];
+                }
+                return $ret;
             }
             
         } catch (Exception $e) {
@@ -126,9 +134,20 @@ class Aardvark_Theme_Installer {
             return array('success' => false, 'error' => 'Download failed: ' . $response->get_error_message());
         }
         
-        if (wp_remote_retrieve_response_code($response) !== 200) {
+        $status_code = wp_remote_retrieve_response_code($response);
+        if ($status_code !== 200) {
+            $response_body = @file_get_contents($temp_file);
             @unlink($temp_file);
-            return array('success' => false, 'error' => 'GitHub API returned error: ' . wp_remote_retrieve_response_code($response));
+            $debug = array(
+                'status_code' => $status_code,
+                'url' => $download_url,
+                'owner' => $repo_info['owner'],
+                'repo' => $repo_info['name'],
+                'branch' => $branch,
+                'has_token' => !empty($token),
+                'response_body' => substr($response_body, 0, 500),
+            );
+            return array('success' => false, 'error' => 'GitHub API returned error: ' . $status_code, 'debug' => $debug);
         }
         
         // Extract the zip file

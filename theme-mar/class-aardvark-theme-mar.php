@@ -164,7 +164,16 @@ class Aardvark_Theme_Mar {
         );
 
         if (isset($result['error'])) {
-            wp_send_json_error($result['error']);
+            $error_data = array(
+                'message' => $result['error'],
+                'theme_slug' => $theme_folder,
+                'github_url' => $theme_info['github_url'],
+                'branch' => $theme_info['branch_name'],
+            );
+            if (isset($result['debug'])) {
+                $error_data['debug'] = $result['debug'];
+            }
+            wp_send_json_error($error_data);
         } else {
             wp_send_json_success($result['message']);
         }
@@ -211,7 +220,16 @@ class Aardvark_Theme_Mar {
         );
 
         if (isset($result['error'])) {
-            wp_send_json_error($result['error']);
+            $error_data = array(
+                'message' => $result['error'],
+                'theme_slug' => $theme_folder,
+                'github_url' => $theme_info['github_url'],
+                'branch' => $theme_info['branch_name'],
+            );
+            if (isset($result['debug'])) {
+                $error_data['debug'] = $result['debug'];
+            }
+            wp_send_json_error($error_data);
         } else {
             wp_send_json_success($result['message']);
         }
