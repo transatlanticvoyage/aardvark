@@ -10,15 +10,15 @@ if (!defined('ABSPATH')) {
 class Aardvark_PPX_Themes_Plugins_Mar {
 
     public function __construct() {
-        add_action('admin_menu', array($this, 'add_submenu_page'));
+        add_action('admin_menu', array($this, 'add_submenu_page'), 25);
         add_action('current_screen', array($this, 'maybe_suppress_notices'));
     }
 
     public function add_submenu_page() {
         add_submenu_page(
             'papluginsmar',
-            'PPX Themes Plugins Mar',
-            'PPX Themes Plugins Mar',
+            'PPX Hauser Themes & Plugin',
+            'PPX Hauser Themes & Plugin',
             'manage_options',
             'ppx_themes_plugins_mar',
             array($this, 'display_page')
