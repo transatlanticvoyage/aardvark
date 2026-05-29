@@ -9,6 +9,7 @@
  * Text Domain: aardvark
  * 
  * Test comment: VSCode source control pane test - 2026-03-20
+ * Test comment: VSCode source control sync test - 2026-05-28
  */
 
 // Prevent direct access
