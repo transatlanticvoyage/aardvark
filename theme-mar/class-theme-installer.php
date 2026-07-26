@@ -147,7 +147,24 @@ class Aardvark_Theme_Installer {
                 'has_token' => !empty($token),
                 'response_body' => substr($response_body, 0, 500),
             );
-            return array('success' => false, 'error' => 'GitHub API returned error: ' . $status_code, 'debug' => $debug);
+
+            $error = 'GitHub API returned error: ' . $status_code;
+            // GitHub answers 404 (not 403) for a private repo when the caller isn't
+            // authenticated, so a bare "Not Found" here almost always means a missing
+            // token rather than a missing repo or a wrong branch.
+            if ($status_code === 404 && empty($token)) {
+                $error .= ' — the repository is private and no GitHub token is configured.'
+                        . ' Set one in the "GitHub Access Token" panel on this page, or define'
+                        . ' AARDVARK_GITHUB_TOKEN in wp-config.php.';
+            } elseif ($status_code === 404) {
+                $error .= ' — repo or branch not found, or the token lacks access to it.';
+            } elseif ($status_code === 401) {
+                $error .= ' — the configured GitHub token was rejected (expired or revoked).';
+            } elseif ($status_code === 403) {
+                $error .= ' — access forbidden or the API rate limit was hit.';
+            }
+
+            return array('success' => false, 'error' => $error, 'debug' => $debug);
         }
         
         // Extract the zip file

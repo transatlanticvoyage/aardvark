@@ -15,6 +15,88 @@ class Aardvark_Theme_Mar {
         add_action('wp_ajax_aardvark_update_theme', array($this, 'ajax_update_theme'));
         add_action('wp_ajax_aardvark_activate_theme', array($this, 'ajax_activate_theme'));
         add_action('wp_ajax_aardvark_delete_theme', array($this, 'ajax_delete_theme'));
+        add_action('wp_ajax_aardvark_save_github_token', array($this, 'ajax_save_github_token'));
+    }
+
+    /**
+     * Option holding the GitHub personal access token used to reach the private
+     * theme repositories. Stored with autoload=false so it is not loaded on every
+     * front-end request.
+     */
+    const GITHUB_TOKEN_OPTION = 'aardvark_github_token';
+
+    /**
+     * The token used for GitHub API calls in the theme path.
+     *
+     * The theme repos under transatlanticvoyage are private, and GitHub answers an
+     * unauthenticated request for a private repo with 404 (not 403) — which is why
+     * an anonymous zipball call fails with "Not Found" rather than anything that
+     * looks like a permissions problem.
+     *
+     * A constant in wp-config.php wins over the stored option, so a site can keep
+     * the token out of the database entirely:
+     *     define('AARDVARK_GITHUB_TOKEN', 'ghp_xxx');
+     */
+    public static function get_github_token() {
+        if (defined('AARDVARK_GITHUB_TOKEN') && AARDVARK_GITHUB_TOKEN) {
+            return (string) AARDVARK_GITHUB_TOKEN;
+        }
+        return (string) get_option(self::GITHUB_TOKEN_OPTION, '');
+    }
+
+    /** Where the active token came from, for display only. */
+    public static function get_github_token_source() {
+        if (defined('AARDVARK_GITHUB_TOKEN') && AARDVARK_GITHUB_TOKEN) {
+            return 'wp-config.php constant';
+        }
+        if (get_option(self::GITHUB_TOKEN_OPTION, '')) {
+            return 'saved in this site';
+        }
+        return '';
+    }
+
+    /**
+     * A masked form of the token, safe to render in the admin. Only the last 4
+     * characters are ever echoed back — the stored value is never sent to the
+     * browser in full.
+     */
+    public static function get_github_token_hint() {
+        $token = self::get_github_token();
+        if ($token === '') {
+            return '';
+        }
+        $tail = substr($token, -4);
+        return str_repeat('•', 8) . $tail;
+    }
+
+    /** AJAX: store (or clear) the GitHub token. */
+    public function ajax_save_github_token() {
+        check_ajax_referer('aardvark_github_token', 'nonce');
+
+        if (!current_user_can('manage_options')) {
+            wp_send_json_error(array('message' => 'Insufficient permissions'));
+        }
+
+        if (defined('AARDVARK_GITHUB_TOKEN') && AARDVARK_GITHUB_TOKEN) {
+            wp_send_json_error(array('message' => 'A token is defined in wp-config.php (AARDVARK_GITHUB_TOKEN); it takes precedence and cannot be overwritten here.'));
+        }
+
+        $token = isset($_POST['token']) ? trim(wp_unslash($_POST['token'])) : '';
+        // Deliberately not sanitize_text_field(): tokens are opaque strings and
+        // must be stored byte-for-byte.
+        $token = preg_replace('/[^\x21-\x7E]/', '', $token);
+
+        if ($token === '') {
+            delete_option(self::GITHUB_TOKEN_OPTION);
+            wp_send_json_success(array('message' => 'Token cleared.', 'hint' => '', 'source' => ''));
+        }
+
+        update_option(self::GITHUB_TOKEN_OPTION, $token, false);
+        wp_send_json_success(array(
+            'message' => 'Token saved.',
+            'hint'    => self::get_github_token_hint(),
+            'source'  => self::get_github_token_source(),
+        ));
     }
     
     public function add_admin_menu() {
@@ -156,11 +238,13 @@ class Aardvark_Theme_Mar {
         // Load the installer
         require_once plugin_dir_path(__FILE__) . 'class-theme-installer.php';
 
-        $installer = new Aardvark_Theme_Installer();
+        $token = self::get_github_token();
+
+        $installer = new Aardvark_Theme_Installer($token);
         $result = $installer->install_from_github(
             $theme_info['github_url'],
             $theme_info['branch_name'],
-            ''
+            $token
         );
 
         if (isset($result['error'])) {
@@ -211,12 +295,14 @@ class Aardvark_Theme_Mar {
         // Load the installer
         require_once plugin_dir_path(__FILE__) . 'class-theme-installer.php';
 
-        $installer = new Aardvark_Theme_Installer();
+        $token = self::get_github_token();
+
+        $installer = new Aardvark_Theme_Installer($token);
         $result = $installer->update_from_github(
             $theme_folder,
             $theme_info['github_url'],
             $theme_info['branch_name'],
-            ''
+            $token
         );
 
         if (isset($result['error'])) {

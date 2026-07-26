@@ -120,6 +120,48 @@ class Aardvark_PPX_Themes_Plugins_Mar_Page {
                 PPX Themes Plugins Mar
             </h1>
 
+            <?php
+            // GitHub token panel. The theme repos are private, so every zipball call
+            // needs an authenticated request or GitHub replies 404.
+            $token_hint   = class_exists('Aardvark_Theme_Mar') ? Aardvark_Theme_Mar::get_github_token_hint() : '';
+            $token_source = class_exists('Aardvark_Theme_Mar') ? Aardvark_Theme_Mar::get_github_token_source() : '';
+            $token_locked = defined('AARDVARK_GITHUB_TOKEN') && AARDVARK_GITHUB_TOKEN;
+            ?>
+            <div style="background: #fff; border: 1px solid #c3c4c7; border-left: 4px solid <?php echo $token_hint ? '#00a32a' : '#d63638'; ?>; border-radius: 4px; padding: 15px; margin: 20px 0;">
+                <div style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
+                    <strong style="font-size: 14px;">GitHub Access Token</strong>
+                    <span id="ppx-token-status" style="font-size: 13px; color: <?php echo $token_hint ? '#00a32a' : '#d63638'; ?>;">
+                        <?php
+                        if ($token_hint) {
+                            echo 'set (' . esc_html($token_hint) . ') — ' . esc_html($token_source);
+                        } else {
+                            echo 'not set — updates from private repos will fail with 404';
+                        }
+                        ?>
+                    </span>
+                </div>
+                <?php if ($token_locked) : ?>
+                    <p style="margin: 10px 0 0 0; color: #646970; font-size: 13px;">
+                        Defined as <code>AARDVARK_GITHUB_TOKEN</code> in wp-config.php. It takes precedence and cannot be changed from here.
+                    </p>
+                <?php else : ?>
+                    <div style="display: flex; align-items: center; gap: 10px; margin-top: 10px; flex-wrap: wrap;">
+                        <input type="password" id="ppx-github-token" autocomplete="new-password" spellcheck="false"
+                               placeholder="<?php echo $token_hint ? 'enter a new token to replace the current one' : 'ghp_… or github_pat_…'; ?>"
+                               style="width: 380px; padding: 7px 10px; border: 1px solid #D1D5DB; border-radius: 4px; font-family: monospace;">
+                        <button type="button" id="ppx-save-token" style="padding: 7px 15px; background: #2271b1; color: #fff; border: none; border-radius: 3px; cursor: pointer;">Save Token</button>
+                        <?php if ($token_hint) : ?>
+                            <button type="button" id="ppx-clear-token" style="padding: 7px 15px; background: #f6f7f7; color: #b32d2e; border: 1px solid #c3c4c7; border-radius: 3px; cursor: pointer;">Clear</button>
+                        <?php endif; ?>
+                        <span id="ppx-token-msg" style="font-size: 13px; color: #646970;"></span>
+                    </div>
+                    <p style="margin: 10px 0 0 0; color: #646970; font-size: 13px;">
+                        Needs read access to the theme repos: a classic token with the <code>repo</code> scope, or a fine-grained token granting
+                        <strong>Contents: Read-only</strong> on <code>transatlanticvoyage/*</code>. Stored in this site's options (not autoloaded) and never displayed again in full.
+                    </p>
+                <?php endif; ?>
+            </div>
+
             <h2 style="margin: 30px 0 15px 0;">Hauser Themes</h2>
 
             <!-- Search and Active Theme Badge -->
@@ -503,6 +545,54 @@ class Aardvark_PPX_Themes_Plugins_Mar_Page {
                     showDebugPopup('error', 'Install Request Failed', {message: 'AJAX request failed', debug: {status_code: jqXHR.status, response_body: jqXHR.responseText ? jqXHR.responseText.substring(0, 500) : ''}});
                     $button.text(originalText).prop('disabled', false).css({'opacity': '1', 'cursor': 'pointer'});
                 });
+            });
+
+            // Save / clear the GitHub token
+            function saveToken(value, $btn) {
+                var $msg = $('#ppx-token-msg');
+                var original = $btn.text();
+                $btn.text('Saving...').prop('disabled', true);
+                $msg.css('color', '#646970').text('');
+
+                $.post(ajaxurl, {
+                    action: 'aardvark_save_github_token',
+                    token: value,
+                    nonce: '<?php echo wp_create_nonce('aardvark_github_token'); ?>'
+                }).done(function(response) {
+                    if (response.success) {
+                        $('#ppx-github-token').val('');
+                        $msg.css('color', '#00a32a').text(response.data.message);
+                        var $status = $('#ppx-token-status');
+                        if (response.data.hint) {
+                            $status.css('color', '#00a32a').text('set (' + response.data.hint + ') — ' + response.data.source);
+                        } else {
+                            $status.css('color', '#d63638').text('not set — updates from private repos will fail with 404');
+                        }
+                        setTimeout(function() { location.reload(); }, 900);
+                    } else {
+                        $msg.css('color', '#d63638').text((response.data && response.data.message) ? response.data.message : 'Save failed');
+                    }
+                }).fail(function(jqXHR) {
+                    $msg.css('color', '#d63638').text('Request failed (HTTP ' + jqXHR.status + ')');
+                }).always(function() {
+                    $btn.text(original).prop('disabled', false);
+                });
+            }
+
+            $(document).on('click', '#ppx-save-token', function() {
+                var value = $('#ppx-github-token').val();
+                if (!value) {
+                    $('#ppx-token-msg').css('color', '#d63638').text('Paste a token first.');
+                    return;
+                }
+                saveToken(value, $(this));
+            });
+
+            $(document).on('click', '#ppx-clear-token', function() {
+                if (!confirm('Clear the stored GitHub token? Theme updates will start failing with 404.')) {
+                    return;
+                }
+                saveToken('', $(this));
             });
 
             // Update From Github action
